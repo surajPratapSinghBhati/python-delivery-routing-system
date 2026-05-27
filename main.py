@@ -5,17 +5,22 @@ from utils import (
     find_nearest_agent
 )
 
+# Ask user for input JSON file
+input_file = input("Enter JSON file name: ")
+
 # Read input JSON
-with open("input.json", "r") as file:
+with open(input_file, "r") as file:
     data = json.load(file)
 
+# Extract data
 warehouses = data["warehouses"]
 agents = data["agents"]
 packages = data["packages"]
 
-# report dictionary
+# Final report dictionary
 report = {}
 
+# Process each package
 for package in packages:
 
     package_id = package["id"]
@@ -24,20 +29,25 @@ for package in packages:
 
     destination = package["destination"]
 
+    # Get warehouse coordinates
     warehouse_location = warehouses[warehouse_id]
 
+    # Find nearest agent
     nearest_agent, pickup_distance = find_nearest_agent(
         warehouse_location,
         agents
     )
 
+    # Calculate delivery distance
     delivery_distance = calculate_distance(
         warehouse_location,
         destination
     )
 
+    # Total travel distance
     total_distance = pickup_distance + delivery_distance
 
+    # Print delivery simulation
     print(f"\nPackage ID: {package_id}")
 
     print(f"Assigned Agent: {nearest_agent}")
@@ -48,6 +58,7 @@ for package in packages:
 
     print(f"Total Distance: {total_distance:.2f}")
 
+    # Add agent to report if not already present
     if nearest_agent not in report:
 
         report[nearest_agent] = {
@@ -55,11 +66,13 @@ for package in packages:
             "total_distance": 0
         }
 
+    # Update report values
     report[nearest_agent]["packages_delivered"] += 1
 
     report[nearest_agent]["total_distance"] += total_distance
 
 
+# Find best performing agent
 best_agent = None
 
 best_efficiency = float("inf")
@@ -72,6 +85,7 @@ for agent_id, details in report.items():
         details["total_distance"] / packages_count
     )
 
+    # Round values
     details["total_distance"] = round(
         details["total_distance"],
         2
@@ -82,6 +96,7 @@ for agent_id, details in report.items():
         2
     )
 
+    # Check best efficiency
     if efficiency < best_efficiency:
 
         best_efficiency = efficiency
@@ -89,10 +104,11 @@ for agent_id, details in report.items():
         best_agent = agent_id
 
 
+# Add best agent to report
 report["best_agent"] = best_agent
 
 
-# Save report.json
+# Save report file
 with open("report.json", "w") as file:
 
     json.dump(report, file, indent=4)
